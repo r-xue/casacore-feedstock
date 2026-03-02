@@ -2,7 +2,7 @@ name: Build and Upload Personal Package
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [ main, personel ]
     paths:
       - 'recipe/**'
   workflow_dispatch:
