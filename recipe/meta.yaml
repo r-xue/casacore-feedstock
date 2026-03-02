@@ -25,6 +25,7 @@ source:
     - clang-link.patch  # [osx]
     - darwin-gettimeofday.patch  # [osx]
     - libadios2-macos.patch  # [osx]
+    - adios2stman_slicer_selection.patch
 
 build:
   number: {{ build }}

@@ -1,0 +1,65 @@
+diff --git a/tables/DataMan/Adios2StManColumn.cc b/tables/DataMan/Adios2StManColumn.cc
+index 19e504da7..78097914e 100644
+--- a/tables/DataMan/Adios2StManColumn.cc
++++ b/tables/DataMan/Adios2StManColumn.cc
+@@ -191,9 +191,21 @@ void Adios2StManColumn::columnSliceCellsVToSelection(const RefRows &rows, const
+ 
+ void Adios2StManColumn::columnSliceCellsVToSelection(rownr_t row_start, rownr_t row_count, const Slicer &ns)
+ {
++    // The selection must have ndim+1 elements: one for the row
++    // dimension and one for each axis in the Slicer.  For fixed-shape
++    // columns setShapeColumn() already sized the vectors; for
++    // variable-shape (indirect) columns they may still be at their
++    // 1-D default, causing a dimensionality mismatch in
++    // ADIOS2 SetSelection().  Derive the correct size from the Slicer.
++    size_t ndim = static_cast<size_t>(ns.ndim()) + 1;
++    if (itsAdiosStart.size() != ndim)
++    {
++        itsAdiosStart.resize(ndim);
++        itsAdiosCount.resize(ndim);
++    }
+     itsAdiosStart[0] = row_start;
+     itsAdiosCount[0] = row_count;
+-    for (size_t i = 1; i < itsAdiosShape.size(); ++i)
++    for (size_t i = 1; i < ndim; ++i)
+     {
+         itsAdiosStart[i] = ns.start()(ns.ndim() - i);
+         itsAdiosCount[i] = ns.length()(ns.ndim() - i);
+diff --git a/tables/DataMan/Adios2StManColumn.h b/tables/DataMan/Adios2StManColumn.h
+index 39162aa5f..8edec24c5 100644
+--- a/tables/DataMan/Adios2StManColumn.h
++++ b/tables/DataMan/Adios2StManColumn.h
+@@ -164,6 +164,33 @@ public:
+                 itsAdiosStart,
+                 itsAdiosCount);
+         }
++        // When reading, casacore may not call setShapeColumn() for
++        // "indirect array" columns (columns whose table description
++        // declares ndim but no fixed shape).  In that case
++        // isShapeFixed remains false and the selection vectors stay
++        // at their 1-D defaults, while the ADIOS2 variable is N-D.
++        // Infer the correct dimensionality from the variable's
++        // metadata so that subsequent SetSelection() calls pass the
++        // right number of dimensions.
++        if (itsAdiosVariable && aOpenMode == 'r' && !isShapeFixed)
++        {
++            adios2::Dims varShape = itsAdiosVariable.Shape();
++            if (varShape.size() > 1)  // array column: dim-0 is row
++            {
++                isShapeFixed = true;
++                itsAdiosShape = varShape;
++                itsAdiosStart.assign(varShape.size(), 0);
++                itsAdiosCount = varShape;
++                // Derive the casacore IPosition (reversed, without
++                // the leading row dimension).
++                IPosition casaShape(varShape.size() - 1);
++                for (size_t i = 0; i < casaShape.size(); ++i)
++                {
++                    casaShape[i] = varShape[varShape.size() - 1 - i];
++                }
++                itsCasaShape = casaShape;
++            }
++        }
+     }
+ 
+ private:
