@@ -2,16 +2,16 @@ name: Build and Upload Personal Package
 
 on:
   push:
-    branches: [ main, personel ]
+    branches: [main, personel]
     paths:
-      - 'recipe/**'
+      - "recipe/**"
   workflow_dispatch:
 
 jobs:
   build-and-upload:
     # 1. Use the matrix variable to dynamically set the runner OS
     runs-on: ${{ matrix.os }}
-    
+
     # 2. Define the matrix
     strategy:
       fail-fast: false # If one OS fails, let the other continue building
@@ -39,7 +39,8 @@ jobs:
 
       - name: Build the package
         run: |
-          conda build recipe/ -c conda-forge
+          # 2. Tell conda build to use the conda-forge configuration file (-m)
+          conda build recipe/ -c conda-forge -m ${CONDA_PREFIX}/conda_build_config.yaml
 
       - name: Upload to Anaconda Cloud
         env:
