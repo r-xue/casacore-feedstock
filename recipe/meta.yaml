@@ -15,8 +15,8 @@ package:
   version: {{ version }}
 
 source:
-  url: https://github.com/casacore/{{ name }}/archive/v{{ version }}.tar.gz
-  sha256: c04d9d65359320bb234763cb3220e9eb5b5047aae82d503b4a6a8d1c4c65bad0
+  git_url: https://github.com/casacore/casacore.git
+  git_rev: dede86795b94ea5651d26a889fea8ced455bfd14
   patches:
     - ncursesw.patch
     - default-root.patch
