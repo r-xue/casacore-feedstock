@@ -34,7 +34,7 @@ jobs:
 
       - name: Install build dependencies
         run: |
-          conda install conda-build anaconda-client conda-libmamba-solver -c conda-forge -y
+          conda install conda-build anaconda-client conda-libmamba-solver conda-forge-pinning -c conda-forge -y
           conda config --set solver libmamba
 
       - name: Build the package
