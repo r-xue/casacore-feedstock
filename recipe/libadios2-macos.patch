@@ -7,7 +7,7 @@ index faa5b63..c6ff877 100644
  
  if (USE_ADIOS2)
 -    find_package (ADIOS2 2.6.0 CONFIG REQUIRED)
-+    find_package (ADIOS2 2.6.0 REQUIRED COMPONENTS C)
++    find_package (ADIOS2 2.8.0 REQUIRED COMPONENTS C)
      if(NOT USE_MPI)
          set(CASACORE_ADIOS_LIBRARY adios2::cxx11)
      elseif (NOT ADIOS2_HAVE_MPI)

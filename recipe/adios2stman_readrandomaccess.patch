@@ -1,8 +1,45 @@
+diff --git a/tables/DataMan/Adios2StManImpl.h b/tables/DataMan/Adios2StManImpl.h
+index 1111111..2222222 100644
+--- a/tables/DataMan/Adios2StManImpl.h
++++ b/tables/DataMan/Adios2StManImpl.h
+@@ -91,6 +91,10 @@ private:
+     std::shared_ptr<adios2::ADIOS> itsAdios;
+     std::shared_ptr<adios2::IO> itsAdiosIO;
+     std::shared_ptr<adios2::Engine> itsAdiosEngine;
++    // True when the engine was opened with Mode::Write (create64).
++    // EndStep() must only be called in stepping mode (Write), not in
++    // ReadRandomAccess mode.
++    bool itsOpenedForWrite = false;
+ 
+ #ifdef HAVE_MPI
+     // MPI communicator to be used by all instances of this storage manager
 diff --git a/tables/DataMan/Adios2StMan.cc b/tables/DataMan/Adios2StMan.cc
-index 3a3e4e539..4bd5e3395 100644
+index 3a3e4e539..5c6d7e8f9 100644
 --- a/tables/DataMan/Adios2StMan.cc
 +++ b/tables/DataMan/Adios2StMan.cc
-@@ -473,9 +473,13 @@ void Adios2StMan::impl::create64(rownr_t  aNrRows)
+@@ -317,7 +317,12 @@ Adios2StMan::impl::~impl()
+ {
+     if (itsAdiosEngine)
+     {
+-        itsAdiosEngine->EndStep();
++        // EndStep() is only valid in stepping mode (Write).  In
++        // ReadRandomAccess mode (open64) calling it throws.
++        if (itsOpenedForWrite)
++        {
++            itsAdiosEngine->EndStep();
++        }
+         itsAdiosEngine->Close();
+     }
+     for (uInt i = 0; i < ncolumn(); ++i)
+@@ -466,6 +471,7 @@ void Adios2StMan::impl::create64(rownr_t  aNrRows)
+     itsRows = aNrRows;
+     itsAdiosEngine = std::make_shared<adios2::Engine>(
+         itsAdiosIO->Open(fileName() + ".bp", adios2::Mode::Write));
++    itsOpenedForWrite = true;
+     itsAdiosEngine->BeginStep();
+     for (uInt i = 0; i < ncolumn(); ++i)
+     {
+@@ -473,9 +479,13 @@ void Adios2StMan::impl::create64(rownr_t  aNrRows)
  rownr_t Adios2StMan::impl::open64(rownr_t aNrRows, AipsIO &ios)
  {
      itsRows = aNrRows;
