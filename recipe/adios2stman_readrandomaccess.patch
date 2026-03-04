@@ -1,0 +1,20 @@
+diff --git a/tables/DataMan/Adios2StMan.cc b/tables/DataMan/Adios2StMan.cc
+index 3a3e4e539..4bd5e3395 100644
+--- a/tables/DataMan/Adios2StMan.cc
++++ b/tables/DataMan/Adios2StMan.cc
+@@ -473,9 +473,13 @@ void Adios2StMan::impl::create64(rownr_t  aNrRows)
+ rownr_t Adios2StMan::impl::open64(rownr_t aNrRows, AipsIO &ios)
+ {
+     itsRows = aNrRows;
++    // Use ReadRandomAccess so that ADIOS2 memory-maps the .bp file and
++    // serves random Get() calls from the OS page cache instead of doing
++    // a fresh I/O per call.  This dramatically improves performance for
++    // VI2's fine-grained, non-sequential access pattern during imaging.
++    // Requires ADIOS2 >= 2.8.  BeginStep() is not used in this mode.
+     itsAdiosEngine = std::make_shared<adios2::Engine>(
+-        itsAdiosIO->Open(fileName() + ".bp", adios2::Mode::Read));
+-    itsAdiosEngine->BeginStep();
++        itsAdiosIO->Open(fileName() + ".bp", adios2::Mode::ReadRandomAccess));
+     for (uInt i = 0; i < ncolumn(); ++i)
+     {
+         itsColumnPtrBlk[i]->create(itsAdiosEngine, 'r');

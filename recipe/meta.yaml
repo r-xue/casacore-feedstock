@@ -26,6 +26,7 @@ source:
     - darwin-gettimeofday.patch  # [osx]
     - libadios2-macos.patch  # [osx]
     - adios2stman_slicer_selection.patch
+    - adios2stman_readrandomaccess.patch
 
 build:
   number: {{ build }}
